@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 
 from .decorators import get_required
-from .models import Game
+from .models import Game,Review
 from .Serializers.GameSerializer import GameSerializer
 
 
@@ -26,3 +26,13 @@ def game_detail(request, slug):
     serialized_data = serializer.serialize()
 
     return JsonResponse(serialized_data, safe=False)
+
+
+def review_list(request):
+    all_reviews = Review.objects.all()
+
+    serializer = 
+
+
+def review_detail(request):
+    pass
