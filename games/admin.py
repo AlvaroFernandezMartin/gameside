@@ -10,4 +10,4 @@ class GameAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('reting', 'comment', 'game','user')
+    list_display = ('rating', 'comment', 'game','author')

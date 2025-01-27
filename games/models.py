@@ -26,10 +26,13 @@ class Game(models.Model):
     def __str__(self):
         return self.title
 
+    
 
 
 class Review(models.Model):
-    reting = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
     comment =  models.TextField()
     game = models.ForeignKey(Game,on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=False)
+    updated_at = models.DateTimeField(auto_now=False)
