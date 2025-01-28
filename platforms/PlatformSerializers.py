@@ -13,4 +13,3 @@ class PlatformSerializer(BaseSerializer):
             'description': instance.description,
             'logo': self.build_url(instance.logo.url),
         }
-    

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from categories.CategoriesSerializer import CategorieSerializer
+from platforms.PlatformSerializers import PlatformSerializer
 from shared.Serializer import BaseSerializer
 
 
@@ -15,12 +17,10 @@ class GameSerializer(BaseSerializer):
             'description': instance.description,
             'cover': self.build_url(instance.cover.url) if instance.cover else None,
             'stock': instance.stock,
-            'released_at': instance.released_at.isoformat()
-            if isinstance(instance.released_at, datetime)
-            else None,
+            'released_at': instance.released_at,
             'pegi': instance.pegi,
-            'category': BaseSerializer.serialize(instance.category),
-            'platforms': BaseSerializer.serialize(instance.category),
+            'category': CategorieSerializer(instance.category, request=self.request).serialize(),
+            'platforms': PlatformSerializer(instance.platforms, request=self.request).serialize(),
         }
 
 

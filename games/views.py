@@ -9,10 +9,8 @@ from .Serializers.GameSerializer import GameSerializer, ReviewSerializer
 def game_list(request):
     all_games = Game.objects.all()
 
-    serializer = GameSerializer(to_serialize=all_games, request=request)
-    serialized_data = serializer.serialize()
-
-    return JsonResponse(serialized_data, safe=False)
+    serializer = GameSerializer(all_games, request=request)
+    return serializer.json_response()
 
 
 @get_required
@@ -22,20 +20,17 @@ def game_detail(request, slug):
     if not games_detail.exists():
         return JsonResponse({'error': 'No games found'}, status=404)
 
-    serializer = GameSerializer(to_serialize=games_detail, request=request)
-    serialized_data = serializer.serialize()
-
-    return JsonResponse(serialized_data, safe=False)
+    serializer = GameSerializer(games_detail, request=request)
+    return serializer.json_response()
 
 
 @get_required
 def review_list(request):
     all_reviews = Review.objects.all()
 
-    serializer = ReviewSerializer(to_serialize=all_reviews, request=request)
-    serialized_data = serializer.serialize()
+    serializer = ReviewSerializer(all_reviews, request=request)
 
-    return JsonResponse(serialized_data, safe=False)
+    return serializer.json_response()
 
 
 @get_required
@@ -45,7 +40,5 @@ def review_detail(request, pk):
     if not reviews_detail.exists():
         return JsonResponse({'error': 'No games found'}, status=404)
 
-    serializer = ReviewSerializer(to_serialize=reviews_detail, request=request)
-    serialized_data = serializer.serialize()
-
-    return JsonResponse(serialized_data, safe=False)
+    serializer = ReviewSerializer(reviews_detail, request=request)
+    return serializer.json_response()
