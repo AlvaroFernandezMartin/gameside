@@ -19,10 +19,8 @@ class GameSerializer(BaseSerializer):
             if isinstance(instance.released_at, datetime)
             else None,
             'pegi': instance.pegi,
-            'category': str(instance.category) if instance.category else None,
-            'platforms': [str(platform) for platform in instance.platforms.all()]
-            if hasattr(instance.platforms, 'all')
-            else instance.platforms,
+            'category': BaseSerializer.serialize(instance.category),
+            'platforms': BaseSerializer.serialize(instance.category),
         }
 
 
@@ -38,12 +36,10 @@ class ReviewSerializer(BaseSerializer):
             'description': instance.description,
             'cover': self.build_url(instance.cover.url) if instance.cover else None,
             'stock': instance.stock,
-            'released_at': instance.released_at.isoformat()
-            if isinstance(instance.released_at, datetime)
+            'created_at': instance.created_at.isoformat()
+            if isinstance(instance.created_at, datetime)
             else None,
-            'pegi': instance.pegi,
-            'category': str(instance.category) if instance.category else None,
-            'platforms': [str(platform) for platform in instance.platforms.all()]
-            if hasattr(instance.platforms, 'all')
-            else instance.platforms,
+            'updated_at': instance.updated_at.isoformat()
+            if isinstance(instance.updated_at, datetime)
+            else None,
         }

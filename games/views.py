@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 
 from .decorators import get_required
-from .models import Game,Review
-from .Serializers.GameSerializer import GameSerializer
+from .models import Game, Review
+from .Serializers.GameSerializer import GameSerializer, ReviewSerializer
 
 
 @get_required
@@ -28,11 +28,24 @@ def game_detail(request, slug):
     return JsonResponse(serialized_data, safe=False)
 
 
+@get_required
 def review_list(request):
     all_reviews = Review.objects.all()
 
-    serializer = 
+    serializer = ReviewSerializer(to_serialize=all_reviews, request=request)
+    serialized_data = serializer.serialize()
+
+    return JsonResponse(serialized_data, safe=False)
 
 
-def review_detail(request):
-    pass
+@get_required
+def review_detail(request, pk):
+    reviews_detail = Review.objects.filter(pk=pk)
+
+    if not reviews_detail.exists():
+        return JsonResponse({'error': 'No games found'}, status=404)
+
+    serializer = ReviewSerializer(to_serialize=reviews_detail, request=request)
+    serialized_data = serializer.serialize()
+
+    return JsonResponse(serialized_data, safe=False)
