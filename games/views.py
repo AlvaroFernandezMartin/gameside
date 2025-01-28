@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 
-from .decorators import get_required
+from shared.decorators import get_required
+
 from .models import Game, Review
 from .Serializers.GameSerializer import GameSerializer, ReviewSerializer
 
@@ -25,7 +26,7 @@ def game_detail(request, slug):
 
 
 @get_required
-def review_list(request):
+def review_list(request, slug):
     all_reviews = Review.objects.all()
 
     serializer = ReviewSerializer(all_reviews, request=request)
