@@ -30,7 +30,7 @@ class Game(models.Model):
 
 
 class Review(models.Model):
-    rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment =  models.TextField()
     game = models.ForeignKey(Game,on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

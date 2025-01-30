@@ -10,3 +10,5 @@ class Category(models.Model):
 
     def __str__(self):
         return f' Pk: {self.pk},Name: {self.name}, Slug: {self.slug}, Description: {self.description}, Color: {self.color} '
+
+  

@@ -15,11 +15,10 @@ def platform_list(request):
 @get_required
 def platform_detail(request, slug):
 
-    
-    platforms_detail = Platform.objects.filter(slug=slug)
-
-    if not platforms_detail.exists():
-        return JsonResponse({'error': 'No platforms found'}, status=404)
+    try:
+        platforms_detail = Platform.objects.get(slug=slug)
+    except Platform.DoesNotExist:
+        return JsonResponse({'error': f'No  found'}, status=404)
     
     serializer = PlatformSerializer(platforms_detail, request=request)
     return serializer.json_response()
