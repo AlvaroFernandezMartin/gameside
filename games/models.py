@@ -6,21 +6,21 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Game(models.Model):
     class PEGI(models.IntegerChoices):
-        PEGI3 = 3, 'PEGI 3'
-        PEGI7 = 7, 'PEGI 7'
-        PEGI12 = 12, 'PEGI 12'
-        PEGI16 = 16, 'PEGI 16'
-        PEGI18 = 18, 'PEGI 18'
+        PEGI3 = 3,   'Pegi3'
+        PEGI7 = 7,   'Pegi7'
+        PEGI12 = 12, 'Pegi12'
+        PEGI16 = 16, 'Pegi16'
+        PEGI18 = 18, 'Pegi18'
 
     title = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
-    cover = models.ImageField(upload_to='covers/', default='default_cover.png')
+    cover = models.ImageField(upload_to='covers/', default='covers/default.jpg')
     price = models.DecimalField(max_digits=6, decimal_places=2)
     stock = models.PositiveIntegerField()
     released_at = models.DateField()
     pegi = models.IntegerField(choices=PEGI.choices)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    category = models.ForeignKey(Category,  on_delete=models.SET_NULL, null=True)
     platforms = models.ManyToManyField(Platform, blank=True)
 
     def __str__(self):
