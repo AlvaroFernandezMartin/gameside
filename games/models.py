@@ -16,7 +16,7 @@ class Game(models.Model):
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
     cover = models.ImageField(upload_to='covers/', default='covers/default.jpg')
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.FloatField()
     stock = models.PositiveIntegerField()
     released_at = models.DateField()
     pegi = models.IntegerField(choices=PEGI.choices)

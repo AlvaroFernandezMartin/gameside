@@ -11,12 +11,24 @@ from .models import Game, Review
 from .Serializers.GameSerializer import GameSerializer, ReviewSerializer
 
 
+
 @get_required
 def game_list(request):
     all_games = Game.objects.all()
 
-    serializer = GameSerializer(all_games, request=request)
+    category = request.GET.get('category')
+    platform = request.GET.get('platform')
+
+    if category:
+        all_games = all_games.filter(category__slug=category)  
+
+    if platform:
+        all_games = all_games.filter(platforms__slug=platform)  
+
+    serializer = GameSerializer(all_games, many=True)
+
     return serializer.json_response()
+
 
 
 @get_required
@@ -25,8 +37,7 @@ def game_detail(request, slug):
         games_detail = Game.objects.get(slug=slug)
     except Game.DoesNotExist:
         return JsonResponse({'error': 'Game not found'}, status=404)
-    
-        
+
     serializer = GameSerializer(games_detail, request=request)
     return serializer.json_response()
 
@@ -61,13 +72,12 @@ def add_review(request, slug):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
-    if 'token' not in body:
-        return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-    token_str = body['token']
+    token = request.headers['Token']
+    
+   
     try:
-        user = Token.objects.get(token=token_str)
-    except:
+        user = Token.objects.get(key=token).user
+    except :
         return JsonResponse({'error': 'Invalid token'}, status=401)
 
     if 'rating' not in body or 'comment' not in body:

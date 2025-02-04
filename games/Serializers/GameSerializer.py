@@ -17,7 +17,8 @@ class GameSerializer(BaseSerializer):
             'cover': self.build_url(instance.cover.url) if instance.cover else None,
             'stock': instance.stock,
             'released_at': instance.released_at,
-            'pegi': instance.pegi,
+            'pegi': instance.get_pegi_display(),
+            'price': instance.price, 
             'category': CategorieSerializer(instance.category, request=self.request).serialize(),
             'platforms': PlatformSerializer(
                 instance.platforms.all(), request=self.request
