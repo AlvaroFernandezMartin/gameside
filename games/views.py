@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 
 from django.http import JsonResponse
@@ -73,13 +74,23 @@ def add_review(request, slug):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
-    token = request.headers['Token']
+    token = request.headers.get('Authorization')
 
+    if not token:
+        return JsonResponse({'error': 'Authorization token is missing'}, status=403)
+    m = re.fullmatch(
+        r'Bearer (?P<token_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})',
+        token,
+    )
+
+    if not m:
+        return JsonResponse({'error': 'Invalid authentication token'}, status=400)
     try:
-        user = Token.objects.get(key=token).user
-    except:
-        return JsonResponse({'error': 'Invalid token'}, status=401)
+        token_obj = Token.objects.get(key=m['token'])
+    except Token.DoesNotExist:
+        return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
 
+    request.user = token_obj.user
     if 'rating' not in body or 'comment' not in body:
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
