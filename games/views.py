@@ -11,7 +11,6 @@ from .models import Game, Review
 from .Serializers.GameSerializer import GameSerializer, ReviewSerializer
 
 
-
 @get_required
 def game_list(request):
     all_games = Game.objects.all()
@@ -20,15 +19,14 @@ def game_list(request):
     platform = request.GET.get('platform')
 
     if category:
-        all_games = all_games.filter(category__slug=category)  
+        all_games = all_games.filter(category__slug=category)
 
     if platform:
-        all_games = all_games.filter(platforms__slug=platform)  
+        all_games = all_games.filter(platforms__slug=platform)
 
-    serializer = GameSerializer(all_games, many=True)
+    serializer = GameSerializer(all_games, request=request)
 
     return serializer.json_response()
-
 
 
 @get_required
@@ -73,11 +71,10 @@ def add_review(request, slug):
         return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
     token = request.headers['Token']
-    
-   
+
     try:
         user = Token.objects.get(key=token).user
-    except :
+    except:
         return JsonResponse({'error': 'Invalid token'}, status=401)
 
     if 'rating' not in body or 'comment' not in body:

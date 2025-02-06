@@ -14,11 +14,11 @@ class GameSerializer(BaseSerializer):
             'title': instance.title,
             'slug': instance.slug,
             'description': instance.description,
-            'cover': self.build_url(instance.cover.url) if instance.cover else None,
+            'cover': self.build_url(instance.cover.url),
+            'price': instance.price,
             'stock': instance.stock,
             'released_at': instance.released_at,
             'pegi': instance.get_pegi_display(),
-            'price': instance.price, 
             'category': CategorieSerializer(instance.category, request=self.request).serialize(),
             'platforms': PlatformSerializer(
                 instance.platforms.all(), request=self.request
@@ -35,6 +35,7 @@ class ReviewSerializer(BaseSerializer):
             'id': instance.pk,
             'rating': instance.rating,
             'comment': instance.comment,
+            'game': GameSerializer(instance.game, request=self.request).serialize(),
             'author': UserSerializer(instance.author, request=self.request).serialize(),
             'created_at': instance.created_at,
             'updated_at': instance.updated_at,
