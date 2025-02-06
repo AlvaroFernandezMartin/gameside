@@ -86,7 +86,7 @@ def add_review(request, slug):
     if not m:
         return JsonResponse({'error': 'Invalid authentication token'}, status=400)
     try:
-        token_obj = Token.objects.get(key=m['token'])
+        token_obj = Token.objects.get(key=m['token_id'])
     except Token.DoesNotExist:
         return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
 
@@ -112,6 +112,4 @@ def add_review(request, slug):
         updated_at=datetime.now(),
     )
 
-    return JsonResponse(
-        {'id': review.pk, 'rating': review.rating, 'comment': review.comment}, status=200
-    )
+    return JsonResponse({'id': review.pk}, status=200)
