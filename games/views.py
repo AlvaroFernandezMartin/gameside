@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from shared.decorators import get_required
 from users.models import Token
@@ -42,8 +43,12 @@ def game_detail(request, slug):
 
 @get_required
 def review_list(request, slug):
-    all_reviews = Review.objects.all()
+    try:
+        game = Game.objects.get(slug=slug)
+    except Game.DoesNotExist:
+        return JsonResponse({'error': 'Game not found'}, status=404)
 
+    all_reviews = game.reviews.all()
     serializer = ReviewSerializer(all_reviews, request=request)
 
     return serializer.json_response()
@@ -61,10 +66,8 @@ def review_detail(request, pk):
 
 
 @csrf_exempt
+@require_POST
 def add_review(request, slug):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
     try:
         body = json.loads(request.body)
     except json.JSONDecodeError:
