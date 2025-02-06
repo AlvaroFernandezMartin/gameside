@@ -90,7 +90,7 @@ def add_review(request, slug):
     except Token.DoesNotExist:
         return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
 
-    request.user = token_obj.user
+    user = request.user = token_obj.user
     if 'rating' not in body or 'comment' not in body:
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
