@@ -24,3 +24,6 @@ class Order(models.Model):
     @property
     def price(self):
         return sum(item.price for item in self.items.all())
+
+    def __str__(self):
+        return f'Key:{self.key}, Status: {self.status}, User: {self.user}, Games: {self.games} '
