@@ -75,28 +75,29 @@ def add_review(request, slug):
         return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
     token = request.headers.get('Authorization')
-
-    if not token:
-        return JsonResponse({'error': 'Authorization token is missing'}, status=403)
-    m = re.fullmatch(
-        r'Bearer (?P<token_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})',
-        token,
-    )
-
-    if not m:
-        return JsonResponse({'error': 'Invalid authentication token'}, status=400)
-    try:
-        token_obj = Token.objects.get(key=m['token_id'])
-    except Token.DoesNotExist:
-        return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
-
-    user = request.user = token_obj.user
     if 'rating' not in body or 'comment' not in body:
         return JsonResponse({'error': 'Missing required fields'}, status=400)
 
     rating = body['rating']
     if not (0 <= rating <= 5):
         return JsonResponse({'error': 'Rating is out of range'}, status=400)
+
+    if not token:
+        return JsonResponse({'error': 'Authorization token is missing'}, status=403)
+
+    m = re.fullmatch(
+        r'Bearer (?P<token>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})',
+        token,
+    )
+
+    if not m:
+        return JsonResponse({'error': 'Invalid authentication token'}, status=400)
+    try:
+        token_obj = Token.objects.get(key=m['token'])
+    except Token.DoesNotExist:
+        return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
+
+    user = request.user = token_obj.user
 
     try:
         game = Game.objects.get(slug=slug)
