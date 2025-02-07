@@ -81,7 +81,6 @@ def add_review(request, slug):
     rating = body['rating']
     if not (0 <= rating <= 5):
         return JsonResponse({'error': 'Rating is out of range'}, status=400)
-
     if not token:
         return JsonResponse({'error': 'Authorization token is missing'}, status=403)
 

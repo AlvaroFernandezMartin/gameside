@@ -1,24 +1,27 @@
-import json
+import re
 
-from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+
+from .models import Token
 
 
 def auth_required(func):
+    BEARER_TOKEN_REGEX = (
+        r'Bearer (?P<token>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
+    )
+
     def wrapper(request, *args, **kwargs):
-        User = get_user_model()
+        if not (m := re.fullmatch(BEARER_TOKEN_REGEX, request.headers.get('Authorization', ''))):
+            return JsonResponse({'error': 'Invalid authentication token'}, status=400)
+
         try:
-            payload = json.loads(request.body)
+            token = Token.objects.get(key=m['token'])
 
-            user = User.objects.get(token__key=payload.get('token'))
+        except Token.DoesNotExist:
+            return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
 
-            request.user = user
+        request.user = token.user
 
-        except User.DoesNotExist:
-            return JsonResponse(
-                {'error': 'Unknown authentication token'},
-                status=401,
-            )
         return func(request, *args, **kwargs)
 
     return wrapper
