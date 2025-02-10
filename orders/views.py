@@ -1,45 +1,22 @@
-import re
 from datetime import datetime
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from shared.decorators import post_required
-from users.models import Token
+from shared.decorators import get_required, post_required
 
+from .decorators import check_token
 from .models import Order
 from .OrderSerializer import OrderSerializer
 
 
 @csrf_exempt
 @post_required
+@check_token
 def add_order(request):
-    token_header = request.headers.get('Authorization')
-    
-    if not token_header:
-        return JsonResponse({'error': 'Authorization token is missing'}, status=403)
-
-    match = re.fullmatch(
-        r'Bearer (?P<token_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})',
-        token_header
-    )
-
-    if not match:
-        return JsonResponse({'error': 'Invalid authentication token format'}, status=400)
-
-    token_str = match.group('token_id') 
-    try:
-        token_obj = Token.objects.get(key=token_str)
-    except Token.DoesNotExist:
-        return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
-
-    
-    user = token_obj.user  
-
-    
     order = Order.objects.create(
         status=1,
-        user=user,
+        user=request.user,
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
@@ -47,17 +24,24 @@ def add_order(request):
     return JsonResponse({'id': order.pk}, status=200)
 
 
-  
-
-
-
-
-
-
+@csrf_exempt
+@get_required
+@check_token
 def order_detail(request, pk):
-    order = Order.objects.filter(pk=pk)
-    if not order.exists():
-        return JsonResponse({'error': 'No order found'}, status=404)
+    try:
+        order = Order.objects.get(pk=pk)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+    if request.user != order.user:
+        return JsonResponse({'error': 'User is not the owner of requested order'}, status=403)
 
     serializer = OrderSerializer(order, request=request)
     return serializer.json_response()
+
+
+@csrf_exempt
+@get_required
+@check_token
+def order_game_list(request, pk):
+    pass
