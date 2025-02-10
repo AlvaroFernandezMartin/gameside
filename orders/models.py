@@ -17,7 +17,7 @@ class Order(models.Model):
     status = models.IntegerField(choices=Status.choices, default=Status.INITIATED)
     created_at = models.DateTimeField(auto_now_add=False)
     updated_at = models.DateTimeField(auto_now=False)
-    key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.UUIDField(default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     games = models.ManyToManyField(Game)
 
