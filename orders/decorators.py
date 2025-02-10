@@ -31,9 +31,9 @@ def check_token(view_func):
 
 
 def owner_order(view_func):
-    def wrapped_view(request, *args, **kwargs):
+    def wrapped_view(request, pk,*args, **kwargs):
         try:
-            order = Order.objects.get(pk=request.pk)
+            order = Order.objects.get(pk=pk)
         except Order.DoesNotExist:
             return JsonResponse({'error': 'Order not found'}, status=404)
 
