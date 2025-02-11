@@ -7,12 +7,11 @@ from users.models import Token
 
 
 def check_token(view_func):
+    """Verifica la autenticación del usuario a través del token."""
     def wrapped_view(request, *args, **kwargs):
         token_header = request.headers.get('Authorization')
         if not token_header:
-            return JsonResponse(
-                {'error': 'Invalid authentication token'}, status=400
-            )  # Corregido aquí
+            return JsonResponse({'error': 'Invalid authentication token'}, status=400)
 
         match = re.fullmatch(
             r'Bearer (?P<token_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})',
@@ -29,13 +28,12 @@ def check_token(view_func):
             return JsonResponse({'error': 'Unregistered authentication token'}, status=401)
 
         request.user = token_obj.user
-
         return view_func(request, *args, **kwargs)
 
     return wrapped_view
 
-
 def owner_order(view_func):
+    """Verifica que el usuario es dueño de la orden y la pasa a la vista."""
     def wrapped_view(request, *args, **kwargs):
         try:
             order = Order.objects.get(pk=kwargs['pk'])
@@ -45,6 +43,8 @@ def owner_order(view_func):
         if request.user != order.user:
             return JsonResponse({'error': 'User is not the owner of requested order'}, status=403)
 
-        return view_func(request, *args, **kwargs)
+        kwargs.pop('pk', None)
+
+        return view_func(request, order=order, *args,**kwargs)
 
     return wrapped_view
