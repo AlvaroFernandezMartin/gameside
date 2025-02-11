@@ -33,7 +33,6 @@ def add_order(request):
 @owner_order
 def order_detail(request, pk):
     order = Order.objects.get(pk=pk)
-
     serializer = OrderSerializer(order, request=request)
     return serializer.json_response()
 
@@ -44,10 +43,9 @@ def order_detail(request, pk):
 @owner_order
 def order_game_list(request, pk):
     order = Order.objects.get(pk=pk)
-
     games = order.games.all()
-
     serializer = GameSerializer(games, request=request)
+    
     return serializer.json_response()
 
 
@@ -84,3 +82,39 @@ def add_game_to_order(request, pk):
     )
 
     return JsonResponse({'num-games-in-order': games_count}, status=200)
+
+
+    
+    
+
+@csrf_exempt  
+@post_required
+@check_token
+@owner_order 
+def change_order_status(request, pk):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    if "status" not in data:
+        return JsonResponse({"error": "Missing required fields"}, status=400)
+    status = data["status"]
+    order = Order.objects.get(pk=pk)
+
+    valid_statuses = [Order.Status.CONFIRMED, Order.Status.CANCELLED]
+    if status not in valid_statuses:
+        return JsonResponse({"error": "Invalid status"}, status=400)
+
+    if order.status != Order.Status.INITIATED:
+        return JsonResponse({"error": "Orders can only be confirmed/cancelled when initiated"}, status=400)
+
+    order.status = status
+    order.save()
+
+    if status == Order.Status.CANCELLED:
+        for game in order.games.all():
+            game.stock += 1  
+            game.save()
+
+    return JsonResponse({"status": order.status,"status_label": order.get_status_display()}, status=200)
