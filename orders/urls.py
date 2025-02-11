@@ -7,6 +7,6 @@ app_name = 'orders'
 urlpatterns = [
     path('add/', views.add_order, name='add-order'),
     path('<int:pk>/', views.order_detail, name='order-detail'),
-    path('<int:pk>/games/', views.order_game_list, name='order_game_list'),
-
+    path('<int:pk>/games/', views.order_game_list, name='order-game-list'),
+    path('<int:pk>/games/add/', views.add_game_to_order, name='add-game-to-order'),
 ]
