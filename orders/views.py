@@ -4,11 +4,10 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from games.models import Game
 from games.Serializers.GameSerializer import GameSerializer
 from shared.decorators import get_required, post_required
 
-from .decorators import check_token, owner_order
+from .decorators import check_token, game_chequed, invalid_json, owner_order
 from .models import Order
 from .OrderSerializer import OrderSerializer
 
@@ -50,26 +49,19 @@ def order_game_list(request, order):
 
 @csrf_exempt
 @post_required
+@invalid_json
 @check_token
+@game_chequed
 @owner_order
-def add_game_to_order(request, order):
+def add_game_to_order(request, order, game):
     """Añade un juego a la orden si el usuario es dueño de la misma."""
-    try:
-        body = json.loads(request.body)
-        slug = body.get('game-slug')
-        if not slug:
-            return JsonResponse({'error': 'Missing required fields'}, status=400)
-        
-        game = Game.objects.get(slug=slug)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON body'}, status=400)
-    except Game.DoesNotExist:
-        return JsonResponse({'error': 'Game not found'}, status=404)
-
+    print('MARICOOOOON', game)
     order.games.add(game)
 
     games_count = order.games.count()
-    print(f'Order ID: {order.pk}, User: {order.user}, Game Slug: {game.slug}, Games Count: {games_count}')
+    print(
+        f'Order ID: {order.pk}, User: {order.user}, Game Slug: {game.slug}, Games Count: {games_count}'
+    )
 
     return JsonResponse({'num-games-in-order': games_count}, status=200)
 
@@ -83,15 +75,20 @@ def change_order_status(request, order):
     try:
         data = json.loads(request.body)
         status = data.get('status')
-        if status not in [Order.Status.CONFIRMED, Order.Status.CANCELLED]:
+        if status not in [Order.Status.CONFIRMED, Order.Status.CANCELLED,Order.Status.PAID]:
             return JsonResponse({'error': 'Invalid status'}, status=400)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
-    if order.status != Order.Status.INITIATED:
+    if order.status != Order.Status.INITIATED and status in [Order.Status.CONFIRMED, Order.Status.CANCELLED]:
+        print('ORDER STATUS:',order.status,' STATUS:',status)
         return JsonResponse(
             {'error': 'Orders can only be confirmed/cancelled when initiated'}, status=400
         )
+    if order.status == Order.Status.INITIATED and status == Order.Status.PAID:
+        return JsonResponse( {'error': 'Invalid status'}, status=400)
+
+
 
     order.status = status
     order.save()
@@ -100,5 +97,16 @@ def change_order_status(request, order):
         for game in order.games.all():
             game.stock += 1
             game.save()
+    print(JsonResponse(
+        {'status': order.get_status_display()}, status=200
+    ))
+    return JsonResponse(
+        {'status': order.get_status_display()}, status=200
+    )
 
-    return JsonResponse({'status': order.status, 'status_label': order.get_status_display()}, status=200)
+
+@csrf_exempt
+@post_required
+@check_token
+def pay_order(request):
+    pass

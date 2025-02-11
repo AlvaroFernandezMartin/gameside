@@ -11,8 +11,8 @@ class Order(models.Model):
     class Status(models.IntegerChoices):
         INITIATED = 1, 'Initiated'
         CONFIRMED = 2, 'Confirmed'
-        CANCELLED = 3, 'Paid'
-        PAID = -1, 'Cancelled'
+        PAID = 3, 'Paid'
+        CANCELLED = -1, 'Cancelled'
 
     status = models.IntegerField(choices=Status.choices, default=Status.INITIATED)
     created_at = models.DateTimeField(auto_now_add=False)

@@ -1,13 +1,16 @@
+import json
 import re
 
 from django.http import JsonResponse
 
+from games.models import Game
 from orders.models import Order
 from users.models import Token
 
 
 def check_token(view_func):
     """Verifica la autenticación del usuario a través del token."""
+
     def wrapped_view(request, *args, **kwargs):
         token_header = request.headers.get('Authorization')
         if not token_header:
@@ -32,8 +35,10 @@ def check_token(view_func):
 
     return wrapped_view
 
+
 def owner_order(view_func):
     """Verifica que el usuario es dueño de la orden y la pasa a la vista."""
+
     def wrapped_view(request, *args, **kwargs):
         try:
             order = Order.objects.get(pk=kwargs['pk'])
@@ -45,6 +50,33 @@ def owner_order(view_func):
 
         kwargs.pop('pk', None)
 
-        return view_func(request, order=order, *args,**kwargs)
+        return view_func(request, order=order, *args, **kwargs)
+
+    return wrapped_view
+
+
+def invalid_json(view_func):
+    def wrapped_view(request, *args, **kwargs):
+        try:
+            body = json.loads(request.body)
+            slug = body.get('game-slug')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+        if not slug:
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
+        return view_func(request, *args, **kwargs)
+
+    return wrapped_view
+
+
+def game_chequed(view_func):
+    def wrapped_view(request, *args, **kwargs):
+        try:
+            body = json.loads(request.body)
+            slug = body.get('game-slug')
+            game = Game.objects.get(slug=slug)
+        except Game.DoesNotExist:
+            return JsonResponse({'error': 'Game not found'}, status=404)
+        return view_func(request, game=game, *args, **kwargs)
 
     return wrapped_view

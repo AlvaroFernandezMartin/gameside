@@ -18,3 +18,7 @@ class OrderSerializer(BaseSerializer):
             'updated_at': instance.updated_at,
             'games': GameSerializer(instance.games.all(), request=self.request).serialize(),
         }
+
+class PaySerializer(BaseSerializer):
+    def __init__(self, to_serialize, *, fields = ..., request = None):
+        super().__init__(to_serialize, fields=fields, request=request)
