@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from games.Serializers.GameSerializer import GameSerializer
 from shared.decorators import get_required, post_required
 
-from .decorators import check_token, game_chequed, invalid_json, owner_order
+from .decorators import check_token, game_chequed, invalid_json, owner_order,order_status
 from .models import Order
 from .OrderSerializer import OrderSerializer
 
@@ -52,10 +52,8 @@ def order_game_list(request, order):
 @invalid_json
 @check_token
 @game_chequed
-@owner_order
 def add_game_to_order(request, order, game):
-    """Añade un juego a la orden si el usuario es dueño de la misma."""
-    print('MARICOOOOON', game)
+    
     order.games.add(game)
 
     games_count = order.games.count()
@@ -68,17 +66,12 @@ def add_game_to_order(request, order, game):
 
 @csrf_exempt
 @post_required
+@order_status
 @check_token
 @owner_order
-def change_order_status(request, order):
-    """Cambia el estado de la orden si cumple con las condiciones de validación."""
-    try:
-        data = json.loads(request.body)
-        status = data.get('status')
-        if status not in [Order.Status.CONFIRMED, Order.Status.CANCELLED,Order.Status.PAID]:
-            return JsonResponse({'error': 'Invalid status'}, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+def change_order_status(request, order,status):
+    if status not in [Order.Status.CONFIRMED, Order.Status.CANCELLED,Order.Status.PAID]:
+        return JsonResponse({'error': 'Invalid status'}, status=400)
 
     if order.status != Order.Status.INITIATED and status in [Order.Status.CONFIRMED, Order.Status.CANCELLED]:
         print('ORDER STATUS:',order.status,' STATUS:',status)
@@ -107,6 +100,7 @@ def change_order_status(request, order):
 
 @csrf_exempt
 @post_required
+@invalid_json
 @check_token
 def pay_order(request):
     pass

@@ -54,7 +54,19 @@ def owner_order(view_func):
 
     return wrapped_view
 
+def order_status(view_func):
+    def wrapped_view(request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            status = data.get('status')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+        if not status:
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
 
+        
+        return view_func(request,status=status,*args, **kwargs)
+    return wrapped_view
 def invalid_json(view_func):
     def wrapped_view(request, *args, **kwargs):
         try:
@@ -72,11 +84,23 @@ def invalid_json(view_func):
 def game_chequed(view_func):
     def wrapped_view(request, *args, **kwargs):
         try:
+            order = Order.objects.get(pk=kwargs['pk'])
+        except Order.DoesNotExist:
+            return JsonResponse({'error': 'Order not found'}, status=404)
+        try:
             body = json.loads(request.body)
             slug = body.get('game-slug')
             game = Game.objects.get(slug=slug)
         except Game.DoesNotExist:
             return JsonResponse({'error': 'Game not found'}, status=404)
-        return view_func(request, game=game, *args, **kwargs)
+        
+
+        if request.user != order.user:
+            return JsonResponse({'error': 'User is not the owner of requested order'}, status=403)
+
+        kwargs.pop('pk', None)
+
+        return view_func(request, order=order,game=game, *args, **kwargs)
 
     return wrapped_view
+    
