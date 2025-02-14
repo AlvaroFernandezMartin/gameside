@@ -1,11 +1,10 @@
 import json
 import re
-
 from django.http import JsonResponse
-
 from games.models import Game
 from orders.models import Order
 from users.models import Token
+from datetime import datetime
 
 
 def check_token(view_func):
@@ -34,7 +33,6 @@ def check_token(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapped_view
-
 
 def owner_order(view_func):
     """Verifica que el usuario es dueño de la orden y la pasa a la vista."""
@@ -67,6 +65,7 @@ def order_status(view_func):
         
         return view_func(request,status=status,*args, **kwargs)
     return wrapped_view
+
 def invalid_json(view_func):
     def wrapped_view(request, *args, **kwargs):
         try:
@@ -79,7 +78,6 @@ def invalid_json(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapped_view
-
 
 def game_chequed(view_func):
     def wrapped_view(request, *args, **kwargs):
@@ -104,3 +102,40 @@ def game_chequed(view_func):
 
     return wrapped_view
     
+def check_card(view_func):
+    """Verifica los campos de la tarjeta, su formato y si está caducada."""
+    def wrapped_view(request, *args, **kwargs):
+        card_pattern = r'^\d{4}-\d{4}-\d{4}-\d{4}$'
+        expiry_pattern = r'^(0[1-9]|1[0-2])/\d{4}$'
+        cvv_pattern = r'^\d{3}$'
+        
+        try:
+            body = json.loads(request.body)
+            card_number = body["card-number"]
+            exp_date = body["exp-date"]
+            cvc = body["cvc"]
+        except (json.JSONDecodeError, KeyError):
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
+        
+        if not re.fullmatch(card_pattern, card_number):
+            return JsonResponse({'error': 'Invalid card number'}, status=400)
+        
+        if not re.fullmatch(expiry_pattern, exp_date):
+            return JsonResponse({'error': 'Invalid expiration date'}, status=400)
+        
+        if not re.fullmatch(cvv_pattern, cvc):
+            return JsonResponse({'error': 'Invalid CVC'}, status=400)
+        
+        try:
+            exp_month, exp_year = exp_date.split('/')
+            exp_month = int(exp_month)
+            exp_year = int(exp_year)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid expiration date'}, status=400)
+        
+        now = datetime.now()
+        if (exp_year, exp_month) < (now.year, now.month):
+            return JsonResponse({'error': 'Card expired'}, status=400)
+        
+        return view_func(request, *args, **kwargs)
+    return wrapped_view

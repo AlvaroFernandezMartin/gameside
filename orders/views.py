@@ -1,4 +1,4 @@
-import json
+import json,re,datetime
 from datetime import datetime
 
 from django.http import JsonResponse
@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from games.Serializers.GameSerializer import GameSerializer
 from shared.decorators import get_required, post_required
 
-from .decorators import check_token, game_chequed, invalid_json, owner_order,order_status
+from .decorators import check_token, game_chequed, invalid_json, owner_order,order_status,check_card
 from .models import Order
 from .OrderSerializer import OrderSerializer
 
@@ -81,8 +81,6 @@ def change_order_status(request, order,status):
     if order.status == Order.Status.INITIATED and status == Order.Status.PAID:
         return JsonResponse( {'error': 'Invalid status'}, status=400)
 
-
-
     order.status = status
     order.save()
 
@@ -98,9 +96,19 @@ def change_order_status(request, order,status):
     )
 
 
-@csrf_exempt
+
+
 @post_required
-@invalid_json
 @check_token
-def pay_order(request):
-    pass
+@owner_order
+@check_card
+def pay_order(request, order):
+    if order.status != Order.Status.CONFIRMED:
+        return JsonResponse({'error': 'Orders can only be paid when confirmed'}, status=400)
+    
+    order.status = Order.Status.PAID
+    order.save()
+    return JsonResponse({'status': 'Paid'})
+
+
+
